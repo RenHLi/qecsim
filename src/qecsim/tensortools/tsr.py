@@ -19,16 +19,26 @@ def delta(shape):
     :return: Delta tensor
     :rtype: numpy.array
     """
-    # start with ones, in case all dummy indices
-    n = np.ones(shape, dtype=int)
     # non-dummy index mask
-    ndi_mask = np.array(n.shape) != 1
-    # fill values
+    ndi_mask = np.array(shape) != 1
+
     if any(ndi_mask):
-        for i in np.ndindex(n.shape):
-            ndi = np.array(i)[ndi_mask]  # non-dummy indices
-            n[i] = 0 if np.any(ndi != ndi[0]) else 1  # 0 if any non-dummy indices differ
-    return n
+    # start with ones, in case all dummy indices
+        n = np.zeros(shape, dtype=int)
+        index_arr = np.array([*np.ndindex(shape)])
+        # Remove dummy indices
+        trunc_arr = index_arr[:, ndi_mask]
+
+        # Select rows with the same indices
+        mask = np.all(trunc_arr[:, 1:] == trunc_arr[:, :-1], axis=1)
+        selected_rows = index_arr[mask]
+
+        # Change entries with the same indices to 1
+        for lin in selected_rows:
+            n[tuple(lin)] = 1
+        return n
+    else: 
+        return np.ones(shape, dtype=int)
 
 
 def as_scalar(tsr):
